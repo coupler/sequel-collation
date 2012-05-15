@@ -6,4 +6,6 @@ group :development do
   gem "jeweler"
   gem "guard-test"
   gem "mysql2"
+  gem "sqlite3"
+  gem "rake-compiler"
 end

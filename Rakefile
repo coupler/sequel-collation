@@ -32,14 +32,6 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-  test.rcov_opts << '--exclude "gems/*"'
-end
-
 task :default => :test
 
 require 'rdoc/task'
@@ -50,4 +42,10 @@ Rake::RDocTask.new do |rdoc|
   rdoc.title = "sequel-collation #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+require 'rake/extensiontask'
+Rake::ExtensionTask.new('sqlite3-extension') do |t|
+  t.lib_dir = "lib/sequel/extensions/collation/adapters"
+  t.ext_dir = "ext/sequel/extensions/collation/adapters/sqlite3-extension"
 end
