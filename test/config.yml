@@ -1,6 +1,14 @@
 mysql:
+<% if RUBY_PLATFORM == "java" %>
+  "jdbc:mysql://localhost/test?user=test"
+<% else %>
   adapter: mysql2
   host: localhost
   port: 3306
   database: test
   user: test
+<% end %>
+
+<% if RUBY_PLATFORM == "java" %>
+h2: "jdbc:h2:mem:"
+<% end %>
