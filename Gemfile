@@ -3,7 +3,7 @@ gem "sequel"
 
 group :development do
   gem "bundler"
-  gem "jeweler"
+  gem "rake"
   gem "guard-test"
   gem "mysql2", :platforms => :ruby
   gem "jdbc-mysql", :platforms => :jruby
