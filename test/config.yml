@@ -4,3 +4,6 @@ mysql:
   port: 3306
   database: test
   user: test
+
+sqlite:
+  adapter: sqlite

@@ -1,0 +1,480 @@
+# TODO: get collation out of the syntax tree
+grammar SQLiteSchema
+  rule create_table
+    create temporary? table if_not_exists?
+      a:qualified_table_name
+      left_paren b:column_defs (comma table_constraints)? right_paren
+    {
+      def qualified_table_name
+        a.text_value.strip
+      end
+
+      def column_defs
+        b
+      end
+    }
+  end
+
+  rule whitespace
+    [ \r\n\t]
+  end
+
+  rule whitespace_eater
+    (&whitespace whitespace+)?
+  end
+
+  rule boundary
+    # Check for word boundary; consume whitespace if it exists
+    !(!(whitespace / quoted_identifier / ',' / '(' / ')') .) whitespace_eater
+  end
+
+  rule right_paren
+    ')' whitespace_eater
+  end
+
+  rule comma
+    ',' whitespace_eater
+  end
+
+  rule left_paren
+    '(' whitespace_eater
+  end
+
+  rule qualified_table_name
+    (database_name dot)? table_name
+  end
+
+  rule table_name
+    identifier
+  end
+
+  rule database_name
+    identifier
+  end
+
+  rule column_name
+    identifier
+  end
+
+  rule qualified_column_name
+    qualified_table_name? column_name
+  end
+
+
+  rule dot
+    '.' boundary
+  end
+
+  rule create
+    'CREATE' boundary
+  end
+
+  rule temporary
+    ('TEMPORARY' / 'TEMP') boundary
+  end
+
+  rule table
+    'TABLE' boundary
+  end
+
+  rule if
+    'IF' boundary
+  end
+
+  rule not
+    'NOT' boundary
+  end
+
+  rule exists
+    'EXISTS' boundary
+  end
+
+  rule unique
+    'UNIQUE' boundary
+  end
+
+  rule primary
+    'PRIMARY' boundary
+  end
+
+  rule foreign
+    'FOREIGN' boundary
+  end
+
+  rule key
+    'KEY' boundary
+  end
+
+  rule collate
+    'COLLATE' boundary
+  end
+
+  rule asc_desc
+    ('ASC' / 'DESC') boundary
+  end
+
+  rule type
+    ('NULL' / 'INTEGER' / 'REAL' / 'TEXT' / 'BLOB') boundary
+  end
+
+  rule constraint
+    'CONSTRAINT' boundary
+  end
+
+  rule autoincrement
+    'AUTOINCREMENT' boundary
+  end
+
+  rule on
+    'ON' boundary
+  end
+
+  rule conflict
+    'CONFLICT' boundary
+  end
+
+  rule null
+    'NULL' boundary
+  end
+
+  rule check
+    'CHECK' boundary
+  end
+
+  rule default
+    'DEFAULT' boundary
+  end
+
+  rule current_time
+    'CURRENT_TIME' boundary
+  end
+
+  rule current_date
+    'CURRENT_DATE' boundary
+  end
+
+  rule current_timestamp
+    'CURRENT_TIMESTAMP' boundary
+  end
+
+  rule references
+    'REFERENCES' boundary
+  end
+
+  rule delete
+    'DELETE' boundary
+  end
+
+  rule update
+    'UPDATE' boundary
+  end
+
+  rule set
+    'SET' boundary
+  end
+
+  rule cascade
+    'CASCADE' boundary
+  end
+
+  rule restrict
+    'RESTRICT' boundary
+  end
+
+  rule no
+    'NO' boundary
+  end
+
+  rule action
+    'ACTION' boundary
+  end
+
+  rule match
+    'MATCH' boundary
+  end
+
+  rule deferrable
+    'DEFERRABLE' boundary
+  end
+
+  rule initially
+    'INITIALLY' boundary
+  end
+
+  rule deferred
+    'DEFERRED' boundary
+  end
+
+  rule immediate
+    'IMMEDIATE' boundary
+  end
+
+  rule no_action
+    no action
+  end
+
+  rule not_null
+    not null
+  end
+
+  rule on_conflict
+    on conflict
+  end
+
+  rule foreign_key
+    foreign key
+  end
+
+  rule primary_key
+    primary key
+  end
+
+  rule if_not_exists
+    if not exists
+  end
+
+  rule identifier
+    quoted_identifier / unquoted_identifier
+  end
+
+  rule quoted_identifier
+    (('`' [^`]+ '`') / ('[' [^\]]+ ']')) whitespace_eater
+  end
+
+  rule unquoted_identifier
+    [\w]+ boundary
+  end
+
+  rule column_defs
+    a:column_def b:(comma column_def)*
+    {
+      def columns
+        result = [a]
+        b.elements.each { |e| result << e.elements[1] }
+        result
+      end
+    }
+  end
+
+  rule column_def
+    identifier type_name? a:column_constraints?
+    {
+      def collation
+        debugger
+        if a.respond_to?(:collation)
+          a.collation
+        else
+          nil
+        end
+      end
+    }
+  end
+
+  rule table_constraints
+    table_constraint (comma table_constraint)*
+  end
+
+  rule table_constraint
+    constraint_name?
+      table_primary_key_constraint /
+      check_constraint /
+      table_foreign_key_constraint
+  end
+
+  rule table_primary_key_constraint
+    (primary_key / unique)
+      left_paren indexed_column (comma indexed_column)* right_paren
+      conflict_clause?
+  end
+
+  rule indexed_column
+    identifier collate_clause? asc_desc?
+  end
+
+  rule collation_name
+    identifier
+  end
+
+  rule collate_clause
+    collate a:collation_name
+    {
+      def collation_name
+        a.text_value.strip
+      end
+    }
+  end
+
+  rule table_foreign_key_constraint
+    foreign_key
+      left_paren column_name (comma column_name)* right_paren
+      foreign_key_clause
+  end
+
+  rule type_name
+    type (left_paren signed_number (comma signed_number)? right_paren)?
+  end
+
+  rule signed_number
+    [+-]? numeric_literal
+  end
+
+  rule numeric_literal
+    ([0-9]+ decimal_portion? / decimal_portion)
+     ('E' [+-]? [0-9]+)? boundary
+  end
+
+  rule decimal_portion
+    '.' [0-9]+
+  end
+
+  rule column_constraints
+    column_constraint+
+    {
+      def collation
+        collation = nil
+        elements.each { |e| if e.collation then collation = e.collation; break; end }
+      end
+    }
+  end
+
+  rule column_constraint
+    constraint_name?
+      column_primary_key_constraint /
+      column_not_null_constraint /
+      column_unique_constraint /
+      check_constraint /
+      column_default_constraint /
+      column_collate_constraint /
+      foreign_key_clause
+    {
+      def collation
+        elements.each do |elt|
+          if elt.respond_to?(:collation_name)
+            return elt.collation_name
+          end
+        end
+        nil
+      end
+    }
+  end
+
+  rule constraint_name
+    constraint identifier
+  end
+
+  rule column_primary_key_constraint
+    primary_key asc_desc? conflict_clause? autoincrement?
+  end
+
+  rule conflict_clause
+    on_conflict
+      ('ROLLBACK' / 'ABORT' / 'FAIL' / 'IGNORE' / 'REPLACE') boundary
+  end
+
+  rule column_not_null_constraint
+    not_null conflict_clause?
+  end
+
+  rule column_unique_constraint
+    unique conflict_clause?
+  end
+
+  rule check_constraint
+    check left_paren expr right_paren
+  end
+
+  rule expr
+    .+
+    #literal_value /
+      #bind_parameter /
+      #qualified_column_name /
+      #(unary_operator expr) /
+      #(expr binary_operator expr) /
+      #function_call /
+      #(left_paren expr right_paren) /
+      #cast /
+      #(expr 'COLLATE' identifier) /
+      #(
+        #expr 'NOT'? ('LIKE' / 'GLOB' / 'REGEXP' / 'MATCH')
+          #expr ('ESCAPE' expr)?
+      #) /
+      #(expr ('ISNULL' / 'NOTNULL' / ('NOT' 'NULL'))) /
+      #(expr 'IS' 'NOT'? expr) /
+      #(expr 'NOT'? 'BETWEEN' expr 'AND' expr) /
+      #(expr 'NOT'? 'IN' left_paren
+  end
+
+  #rule unary_operator
+    #[-+~] / not
+  #end
+
+  #rule binary_operator
+    #[*/%+-&|=><] / '||' / '<<' / '>>' / '<=' / '>=' /
+      #'==' / '!=' / '<>' / ('IS' (ws 'NOT')?) / 'IN' /
+      #'LIKE' / 'GLOB' / 'MATCH' / 'REGEXP' / 'AND' / 'OR'
+  #end
+
+  #rule function_call
+    #identifier left_paren
+      #(
+        #(('DISTINCT' ws)? expr (comma ws expr)*) /
+        #'*'
+      #)?
+      #right_paren
+  #end
+
+  #rule cast
+    #'CAST' left_paren expr 'AS' type_name right_paren
+  #end
+
+  rule column_default_constraint
+    default (signed_number / literal_value / left_paren expr right_paren)
+  end
+
+  rule literal_value
+    numeric_literal / string_literal / blob_literal /
+      null / current_time / current_date / current_timestamp
+  end
+
+  rule string_literal
+    "'" ([\w] / "''")+ "'"
+  end
+
+  rule blob_literal
+    [xX] string_literal
+  end
+
+  rule column_collate_constraint
+    collate_clause
+    {
+      def collation_name
+        elements[0].collation_name
+      end
+    }
+  end
+
+  rule foreign_key_clause
+    references identifier
+      (left_paren identifier (comma identifier)* right_paren)?
+      foreign_key_clause_2*
+      foreign_key_clause_3?
+  end
+
+  rule foreign_key_clause_2
+    (
+      on (delete / update)
+      (
+        (set (null / default)) /
+        cascade /
+        restrict /
+        no_action
+      )
+    )
+    /
+    (match identifier)
+  end
+
+  rule foreign_key_clause_3
+    not? deferrable (initially (deferred / immediate))?
+  end
+end
