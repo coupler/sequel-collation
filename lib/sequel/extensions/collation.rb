@@ -9,7 +9,8 @@ module Sequel
         begin
           Sequel.tsk_require("sequel/extensions/collation/adapters/#{db_type}")
         rescue LoadError => e
-          raise Sequel.convert_exception_class(e, AdapterNotFound)
+          warn "Sequel::Collation does not support the database type '#{db_type}'"
+          return
         end
       end
       base.extend(ADAPTER_MAP[db_type])
