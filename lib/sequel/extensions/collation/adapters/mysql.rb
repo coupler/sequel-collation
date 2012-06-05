@@ -16,6 +16,8 @@ module Sequel
           row[:db_type] = row.delete(:Type)
           row[:type] = schema_column_type(row[:db_type])
           row[:collate] = row.delete(:Collation)
+          row.delete(:Privileges)
+          row.delete(:Comment)
           [m.call(row.delete(:Field)), row]
         end
       end
