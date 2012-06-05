@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "sequel-collation"
   gem.require_paths = ["lib"]
   gem.version       = Sequel::Collation::VERSION
+
+  gem.add_dependency("sequel")
 end
