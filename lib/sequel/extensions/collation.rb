@@ -2,6 +2,11 @@ module Sequel
   module Collation
     ADAPTER_MAP = {}
 
+    @@suppress_warnings = false
+    def self.suppress_warnings=(value)
+      @@suppress_warnings = value
+    end
+
     def self.extended(base)
       db_type = base.database_type
       unless ADAPTER_MAP.has_key?(db_type)
@@ -9,7 +14,9 @@ module Sequel
         begin
           Sequel.tsk_require("sequel/extensions/collation/adapters/#{db_type}")
         rescue LoadError => e
-          warn "Sequel::Collation does not support the database type '#{db_type}'"
+          if !@@suppress_warnings
+            warn "NOTE: Sequel::Collation does not support the database type '#{db_type}'"
+          end
           return
         end
       end
