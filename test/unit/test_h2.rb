@@ -15,7 +15,7 @@ class TestH2 < Test::Unit::TestCase
         String :bar
       end
       schema = db.schema(:foo)
-      assert_equal "ENGLISH", schema.assoc(:bar)[1][:collate]
+      assert_equal "ENGLISH", schema.assoc(:bar)[1][:collation]
     end
   end
 end

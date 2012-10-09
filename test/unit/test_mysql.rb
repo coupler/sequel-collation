@@ -11,10 +11,10 @@ class TestMysql < Test::Unit::TestCase
     database_for("mysql") do |db|
       db.extend(Sequel::Collation)
       db.create_table!(:foo) do
-        String :bar, :collate => "latin1_swedish_ci"
+        String :bar, :collation => "latin1_swedish_ci"
       end
       schema = db.schema(:foo)
-      assert_equal "latin1_swedish_ci", schema.assoc(:bar)[1][:collate]
+      assert_equal "latin1_swedish_ci", schema.assoc(:bar)[1][:collation]
     end
   end
 
@@ -22,7 +22,7 @@ class TestMysql < Test::Unit::TestCase
     database_for("mysql") do |db|
       db.extend(Sequel::Collation)
       db.create_table!(:foo) do
-        String :bar, :collate => "latin1_swedish_ci"
+        String :bar, :collation => "latin1_swedish_ci"
       end
       schema = db.schema(:foo)
       assert !schema.assoc(:bar)[1].has_key?(:Comment)

@@ -12,9 +12,9 @@ module Sequel
         result.each do |(name, info)|
           row = ds.filter(:LOWER.sql_function(:COLUMN_NAME) => :LOWER.sql_function(name.to_s)).first
           if row[:collation_name] == "OFF"
-            info[:collate] = nil
+            info[:collation] = nil
           else
-            info[:collate] = row[:collation_name]
+            info[:collation] = row[:collation_name]
           end
         end
         result
